@@ -156,7 +156,7 @@
             </div>
 
             <!-- Summary Metric Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ocorrências</p>
@@ -212,6 +212,25 @@
                         <li class="flex justify-between"><span class="text-slate-500"><i class="fa-solid fa-cannabis text-emerald-600"></i> Maconha</span><span class="font-bold text-slate-800" id="stat-d-maconha">0 g</span></li>
                         <li class="flex justify-between"><span class="text-slate-500">Crack</span><span class="font-bold text-slate-800" id="stat-d-crack">0 g</span></li>
                         <li class="flex justify-between"><span class="text-slate-500">Cocaína/Outras</span><span class="font-bold text-slate-800" id="stat-d-cocaina">0 g</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Veículos Recuperados</p>
+                            <h3 class="text-2xl font-extrabold text-indigo-600 mt-1" id="stat-veic-recuperados">0</h3>
+                        </div>
+                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                            <i class="fa-solid fa-car-on text-xl"></i>
+                        </div>
+                    </div>
+                    <ul class="mt-2 pt-2 border-t border-slate-100 space-y-1 text-[11px]">
+                        <li class="flex justify-between"><span class="text-slate-500"><i class="fa-solid fa-car text-sky-600"></i> Carros</span><span class="font-bold text-slate-800" id="stat-v-carros">0</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500"><i class="fa-solid fa-motorcycle text-indigo-600"></i> Motos</span><span class="font-bold text-slate-800" id="stat-v-motos">0</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Roubados</span><span class="font-bold text-slate-800" id="stat-v-roubados">0</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Furtados</span><span class="font-bold text-slate-800" id="stat-v-furtados">0</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Localizados</span><span class="font-bold text-slate-800" id="stat-v-localizados">0</span></li>
                     </ul>
                 </div>
 
@@ -299,6 +318,16 @@
                     </div>
                 </div>
 
+                <!-- Vehicles Breakdown -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:col-span-2">
+                    <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-car-on text-indigo-600"></i> Detalhamento de Ocorrências de Veículos e Motos
+                    </h2>
+                    <div class="flex-grow min-h-[250px] relative">
+                        <canvas id="chartVeiculos"></canvas>
+                    </div>
+                </div>
+
                 <!-- Painel de Ocorrências Registradas (filtro + rolagem) -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:col-span-2">
                     <div class="p-5 pb-3 flex flex-wrap items-center justify-between gap-2">
@@ -365,6 +394,9 @@
                     </select>
                     <select id="mapFilterBairro" onchange="renderOverviewMap()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-medium">
                         <option value="">Todos os Bairros</option>
+                    </select>
+                    <select id="mapFilterNatureza" onchange="renderOverviewMap()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-medium max-w-[260px]">
+                        <option value="">Todas as Naturezas</option>
                     </select>
                     <select id="mapFilterFaixa" onchange="renderOverviewMap()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-medium">
                         <option value="">Todas as Faixas Horárias</option>
@@ -576,6 +608,52 @@
                             <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-100">
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Outras Drogas (g)</label>
                                 <input type="number" min="0" step="any" id="droga-outras" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none text-center font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5B: Motos e Veículos -->
+                    <div class="border-b border-slate-100 pb-6">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-motorcycle text-indigo-600"></i> Motos (quantidade)
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                            <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Moto Furtada</label>
+                                <input type="number" min="0" id="moto-furtada" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Moto Roubada</label>
+                                <input type="number" min="0" id="moto-roubada" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Moto Localizada</label>
+                                <input type="number" min="0" id="moto-localizada" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Moto Recuperada</label>
+                                <input type="number" min="0" id="moto-recuperada" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold">
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-car text-sky-600"></i> Veículos / Carros (quantidade)
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Veículo Furtado</label>
+                                <input type="number" min="0" id="veic-furtado" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Veículo Roubado</label>
+                                <input type="number" min="0" id="veic-roubado" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Veículo Localizado</label>
+                                <input type="number" min="0" id="veic-localizado" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 outline-none text-center font-bold">
+                            </div>
+                            <div class="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Veículo Recuperado</label>
+                                <input type="number" min="0" id="veic-recuperado" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 outline-none text-center font-bold">
                             </div>
                         </div>
                     </div>
@@ -855,6 +933,7 @@
         let chartPresosInstance = null;
         let chartArmasInstance = null;
         let chartDrogasInstance = null;
+        let chartVeiculosInstance = null;
 
         // ==========================================
         // INITIALIZATION
@@ -1029,6 +1108,8 @@
                 o.naturezas = o.natureza ? [o.natureza] : ["Outros fatos atípicos[130]"];
             }
             if (o.municoes === undefined) o.municoes = 0;
+            o.motos = Object.assign({furtada:0,roubada:0,localizada:0,recuperada:0}, o.motos || {});
+            o.veiculos = Object.assign({furtado:0,roubado:0,localizado:0,recuperado:0}, o.veiculos || {});
             const nd = normalizeDate(o.data);
             if (nd) o.data = nd;
             return o;
@@ -1238,6 +1319,10 @@
             dashFilterNatureza.innerHTML = '<option value="">Todas as Naturezas</option>' + 
                 NATUREZAS_CLEAN.map(n => `<option value="${n}">${n}</option>`).join('');
 
+            const mapFilterNatureza = document.getElementById("mapFilterNatureza");
+            mapFilterNatureza.innerHTML = '<option value="">Todas as Naturezas</option>' +
+                NATUREZAS_CLEAN.map(n => `<option value="${n}">${n}</option>`).join('');
+
             const regNat = document.getElementById("regNat");
             regNat.innerHTML = '<option value="">Todas as Naturezas</option>' +
                 NATUREZAS_CLEAN.map(n => `<option value="${n}">${n}</option>`).join('');
@@ -1436,6 +1521,18 @@
                     cocaina: parseFloat(document.getElementById("droga-cocaina").value) || 0,
                     outras: parseFloat(document.getElementById("droga-outras").value) || 0
                 },
+                motos: {
+                    furtada: parseInt(document.getElementById("moto-furtada").value) || 0,
+                    roubada: parseInt(document.getElementById("moto-roubada").value) || 0,
+                    localizada: parseInt(document.getElementById("moto-localizada").value) || 0,
+                    recuperada: parseInt(document.getElementById("moto-recuperada").value) || 0
+                },
+                veiculos: {
+                    furtado: parseInt(document.getElementById("veic-furtado").value) || 0,
+                    roubado: parseInt(document.getElementById("veic-roubado").value) || 0,
+                    localizado: parseInt(document.getElementById("veic-localizado").value) || 0,
+                    recuperado: parseInt(document.getElementById("veic-recuperado").value) || 0
+                },
                 obs: document.getElementById("input-obs").value
             };
 
@@ -1494,6 +1591,13 @@
             document.getElementById("droga-crack").value = occ.drogas?.crack || 0;
             document.getElementById("droga-cocaina").value = occ.drogas?.cocaina || 0;
             document.getElementById("droga-outras").value = occ.drogas?.outras || 0;
+
+            ["furtada","roubada","localizada","recuperada"].forEach(k => {
+                document.getElementById("moto-" + k).value = occ.motos?.[k] || 0;
+            });
+            ["furtado","roubado","localizado","recuperado"].forEach(k => {
+                document.getElementById("veic-" + k).value = occ.veiculos?.[k] || 0;
+            });
 
             setPickerPosition(occ.lat, occ.lng);
             switchTab('cadastro');
@@ -1615,6 +1719,21 @@
             document.getElementById("stat-d-crack").innerText = fmtDroga(craG);
             document.getElementById("stat-d-cocaina").innerText = fmtDroga(cocG + outDG);
 
+            // Stat: Veículos e Motos
+            const vt = {mf:0, mr:0, ml:0, mc:0, vf:0, vr:0, vl:0, vc:0};
+            dataset.forEach(o => {
+                vt.mf += o.motos?.furtada || 0;   vt.mr += o.motos?.roubada || 0;
+                vt.ml += o.motos?.localizada || 0; vt.mc += o.motos?.recuperada || 0;
+                vt.vf += o.veiculos?.furtado || 0;   vt.vr += o.veiculos?.roubado || 0;
+                vt.vl += o.veiculos?.localizado || 0; vt.vc += o.veiculos?.recuperado || 0;
+            });
+            document.getElementById("stat-veic-recuperados").innerText = vt.mc + vt.vc;
+            document.getElementById("stat-v-carros").innerText = vt.vc;
+            document.getElementById("stat-v-motos").innerText = vt.mc;
+            document.getElementById("stat-v-roubados").innerText = vt.mr + vt.vr;
+            document.getElementById("stat-v-furtados").innerText = vt.mf + vt.vf;
+            document.getElementById("stat-v-localizados").innerText = vt.ml + vt.vl;
+
             // Stat 5: Top Neighborhood
             const bairroCounts = {};
             dataset.forEach(o => {
@@ -1639,6 +1758,7 @@
             renderChartPresos(dataset);
             renderChartArmas(pist, rev, long, cas, outA);
             renderChartDrogas(macG/1000, craG/1000, cocG/1000, outDG/1000);
+            renderChartVeiculos(vt);
             renderRegistroPanel();
         }
 
@@ -1862,6 +1982,27 @@
             });
         }
 
+        function renderChartVeiculos(vt) {
+            const ctx = document.getElementById("chartVeiculos").getContext("2d");
+            if (chartVeiculosInstance) chartVeiculosInstance.destroy();
+            chartVeiculosInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Furtados', 'Roubados', 'Localizados', 'Recuperados'],
+                    datasets: [
+                        { label: 'Carros/Veículos', data: [vt.vf, vt.vr, vt.vl, vt.vc], backgroundColor: '#0ea5e9', borderRadius: 6 },
+                        { label: 'Motos', data: [vt.mf, vt.mr, vt.ml, vt.mc], backgroundColor: '#6366f1', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
         // ==========================================
         // MAP VIEW TAB LOGIC
         // ==========================================
@@ -1886,13 +2027,15 @@
             const filterM = document.getElementById("mapFilterMunicipio").value;
             const filterB = document.getElementById("mapFilterBairro").value;
             const filterF = document.getElementById("mapFilterFaixa").value;
+            const filterN = document.getElementById("mapFilterNatureza").value;
 
             const filtered = ocorrencias.filter(o => {
                 const matchMes = !filterMes || (o.data && o.data.split('-')[1] === filterMes);
                 const matchM = !filterM || o.municipio === filterM;
                 const matchB = !filterB || o.bairro === filterB;
                 const matchF = !filterF || o.faixa === filterF;
-                return matchMes && matchM && matchB && matchF;
+                const matchN = !filterN || (o.naturezas || [o.natureza]).includes(filterN);
+                return matchMes && matchM && matchB && matchF && matchN;
             });
 
             const bounds = [];
@@ -1904,6 +2047,8 @@
                     const totalArmas = (o.armas?.pistola||0)+(o.armas?.revolver||0)+(o.armas?.longa||0)+(o.armas?.caseira||0)+(o.armas?.outras||0);
                     const totalDrogasG = (o.drogas?.maconha||0)+(o.drogas?.crack||0)+(o.drogas?.cocaina||0)+(o.drogas?.outras||0);
                     const totalDrogasKg = (totalDrogasG / 1000).toFixed(2);
+                    const totalMotos = Object.values(o.motos || {}).reduce((a,b)=>a+(b||0),0);
+                    const totalVeic = Object.values(o.veiculos || {}).reduce((a,b)=>a+(b||0),0);
 
                     const naturezasFormatted = (o.naturezas || [o.natureza]).map(n => `<li class="list-disc ml-4 text-xs font-semibold text-slate-800">${n}</li>`).join('');
 
@@ -1916,6 +2061,8 @@
                             ${o.presos > 0 ? `<p class="text-xs font-bold text-purple-700 mt-1"><i class="fa-solid fa-user-lock"></i> ${o.presos} pessoa(s) presa(s)</p>` : ''}
                             ${totalArmas > 0 || o.municoes > 0 ? `<p class="text-xs font-semibold text-red-600 mt-0.5"><i class="fa-solid fa-gun"></i> ${totalArmas} arma(s) / ${o.municoes||0} mun. apreendida(s)</p>` : ''}
                             ${totalDrogasG > 0 ? `<p class="text-xs font-semibold text-amber-600 mt-0.5"><i class="fa-solid fa-pills"></i> ${totalDrogasKg} kg de drogas</p>` : ''}
+                            ${totalMotos > 0 ? `<p class="text-xs font-semibold text-indigo-600 mt-0.5"><i class="fa-solid fa-motorcycle"></i> Motos: ${o.motos.furtada} furt. / ${o.motos.roubada} roub. / ${o.motos.localizada} local. / ${o.motos.recuperada} recup.</p>` : ''}
+                            ${totalVeic > 0 ? `<p class="text-xs font-semibold text-sky-600 mt-0.5"><i class="fa-solid fa-car"></i> Veículos: ${o.veiculos.furtado} furt. / ${o.veiculos.roubado} roub. / ${o.veiculos.localizado} local. / ${o.veiculos.recuperado} recup.</p>` : ''}
                         </div>
                     `;
 
@@ -1935,6 +2082,7 @@
             document.getElementById("mapFilterMunicipio").value = "";
             document.getElementById("mapFilterBairro").value = "";
             document.getElementById("mapFilterFaixa").value = "";
+            document.getElementById("mapFilterNatureza").value = "";
             renderOverviewMap();
         }
 
@@ -2015,11 +2163,11 @@
         function exportToCSV() {
             if (ocorrencias.length === 0) return alert("Sem dados para exportar.");
 
-            let csv = "ID;Data;FaixaHoraria;Municipio;Bairro;Natureza1;Natureza2;Natureza3;Natureza4;Natureza5;PessoasPresas;Pistola;Revolver;ArmaLonga;ArmaCaseira;OutrasArmas;MunicoesApreendidas;Maconha_g;Crack_g;Cocaina_g;OutrasDrogas_g;Latitude;Longitude;Observacoes\n";
+            let csv = "ID;Data;FaixaHoraria;Municipio;Bairro;Natureza1;Natureza2;Natureza3;Natureza4;Natureza5;PessoasPresas;Pistola;Revolver;ArmaLonga;ArmaCaseira;OutrasArmas;MunicoesApreendidas;Maconha_g;Crack_g;Cocaina_g;OutrasDrogas_g;Latitude;Longitude;Observacoes;MotoFurtada;MotoRoubada;MotoLocalizada;MotoRecuperada;VeiculoFurtado;VeiculoRoubado;VeiculoLocalizado;VeiculoRecuperado\n";
 
             ocorrencias.forEach(o => {
                 const nats = o.naturezas || [o.natureza || ""];
-                csv += `${o.id};"${o.data}";"${o.faixa}";"${o.municipio}";"${o.bairro}";"${nats[0]||''}";"${nats[1]||''}";"${nats[2]||''}";"${nats[3]||''}";"${nats[4]||''}";${o.presos||0};${o.armas?.pistola||0};${o.armas?.revolver||0};${o.armas?.longa||0};${o.armas?.caseira||0};${o.armas?.outras||0};${o.municoes||0};${o.drogas?.maconha||0};${o.drogas?.crack||0};${o.drogas?.cocaina||0};${o.drogas?.outras||0};${o.lat};${o.lng};"${(o.obs||'').replace(/"/g, '""')}"\n`;
+                csv += `${o.id};"${o.data}";"${o.faixa}";"${o.municipio}";"${o.bairro}";"${nats[0]||''}";"${nats[1]||''}";"${nats[2]||''}";"${nats[3]||''}";"${nats[4]||''}";${o.presos||0};${o.armas?.pistola||0};${o.armas?.revolver||0};${o.armas?.longa||0};${o.armas?.caseira||0};${o.armas?.outras||0};${o.municoes||0};${o.drogas?.maconha||0};${o.drogas?.crack||0};${o.drogas?.cocaina||0};${o.drogas?.outras||0};${o.lat};${o.lng};"${(o.obs||'').replace(/"/g, '""')}";${o.motos?.furtada||0};${o.motos?.roubada||0};${o.motos?.localizada||0};${o.motos?.recuperada||0};${o.veiculos?.furtado||0};${o.veiculos?.roubado||0};${o.veiculos?.localizado||0};${o.veiculos?.recuperado||0}\n`;
             });
 
             const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -2120,6 +2268,9 @@
                         const lng = parseNum(cols[17 + colOffset + drugShift]) || -47.4777;
                         const obs = cols[18 + colOffset + drugShift] || "";
 
+                        const ex = (colOffset === 4 && cols.length >= 32) ? 24 : -1;
+                        const xi = (k) => ex < 0 ? 0 : (parseInt(cols[ex + k]) || 0);
+
                         const record = {
                             id: id,
                             data: isoDate,
@@ -2133,6 +2284,8 @@
                             drogas: { maconha: mac, crack: cra, cocaina: coc, outras: outD },
                             lat: lat,
                             lng: lng,
+                            motos: { furtada: xi(0), roubada: xi(1), localizada: xi(2), recuperada: xi(3) },
+                            veiculos: { furtado: xi(4), roubado: xi(5), localizado: xi(6), recuperado: xi(7) },
                             obs: obs
                         };
 
