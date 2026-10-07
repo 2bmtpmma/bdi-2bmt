@@ -134,6 +134,20 @@
                     <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Filtros do Dashboard</h2>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center flex-1 min-w-0">
+                    <!-- Filtro por Ano -->
+                    <div id="dashFilterAno" data-ano-multi class="relative">
+                        <button type="button" id="dashFilterAno-btn" onclick="toggleAnoPanel('dashFilterAno')" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 font-medium flex items-center gap-2 whitespace-nowrap">
+                            <i class="fa-regular fa-calendar text-blue-600"></i>
+                            <span id="dashFilterAno-label">Todos os Anos</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-500"></i>
+                        </button>
+                        <div id="dashFilterAno-panel" class="hidden absolute left-0 mt-1 w-60 bg-white border border-slate-300 rounded-xl shadow-xl p-2" style="z-index:1200">
+                            <div id="dashFilterAno-list" class="grid grid-cols-3 gap-1 max-h-60 overflow-auto"></div>
+                            <p id="dashFilterAno-hint" class="text-[10px] leading-snug text-slate-500 mt-2">Marque um ou mais anos. Sem seleção, todos os anos entram.</p>
+                            <button type="button" onclick="limparAnos('dashFilterAno')" class="mt-2 w-full px-2 py-1 text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-lg transition-all">Limpar seleção</button>
+                        </div>
+                    </div>
+
                     <!-- Filtro por Mês -->
                     <select id="dashFilterMes" onchange="renderDashboard()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 font-medium">
                         <option value="">Todos os Meses</option>
@@ -396,8 +410,26 @@
                         <i class="fa-solid fa-map text-blue-600"></i> Mapa Georreferenciado das Ocorrências
                     </h2>
                     <p class="text-xs text-slate-500">Visualização espacial dos pontos registrados com filtros</p>
+                    <p class="text-xs text-slate-600 mt-1 flex flex-wrap gap-x-4 gap-y-1 font-semibold">
+                        <span><i class="fa-solid fa-location-dot text-blue-600"></i> 2026</span>
+                        <span><i class="fa-solid fa-location-dot text-red-600"></i> 2027</span>
+                        <span class="text-slate-500 font-medium">Demais anos: cor própria</span>
+                    </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <!-- Filtro por Ano no Mapa -->
+                    <div id="mapFilterAno" data-ano-multi class="relative">
+                        <button type="button" id="mapFilterAno-btn" onclick="toggleAnoPanel('mapFilterAno')" class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-medium flex items-center gap-2 whitespace-nowrap">
+                            <i class="fa-regular fa-calendar text-blue-600"></i>
+                            <span id="mapFilterAno-label">Todos os Anos</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-500"></i>
+                        </button>
+                        <div id="mapFilterAno-panel" class="hidden absolute left-0 mt-1 w-60 bg-white border border-slate-300 rounded-xl shadow-xl p-2" style="z-index:1200">
+                            <div id="mapFilterAno-list" class="grid grid-cols-3 gap-1 max-h-60 overflow-auto"></div>
+                            <p id="mapFilterAno-hint" class="text-[10px] leading-snug text-slate-500 mt-2">Marque um ou mais anos. Sem seleção, todos os anos aparecem no mapa.</p>
+                            <button type="button" onclick="limparAnos('mapFilterAno')" class="mt-2 w-full px-2 py-1 text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-lg transition-all">Limpar seleção</button>
+                        </div>
+                    </div>
                     <!-- Filtro por Mês no Mapa -->
                     <select id="mapFilterMes" onchange="renderOverviewMap()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none font-medium">
                         <option value="">Todos os Meses</option>
@@ -957,6 +989,142 @@
         let chartVeiculosInstance = null;
 
         // ======================================================================
+        // ANOS: filtro e comparativo (ex.: 2026 x 2027)
+        // ======================================================================
+        const ANO_CORES = { '2026': '#3b82f6', '2027': '#ef4444' };
+        const ANO_CORES_EXTRA = ['#10b981', '#f59e0b', '#8b5cf6', '#14b8a6', '#ec4899'];
+        function anoCor(a) {
+            return ANO_CORES[a] || ANO_CORES_EXTRA[(parseInt(a, 10) || 0) % ANO_CORES_EXTRA.length];
+        }
+        function anoDe(o) {
+            return (o && o.data) ? String(o.data).split('-')[0] : '';
+        }
+        const ANO_MIN = 2022, ANO_MAX = 2040;
+        function anosComDados() {
+            const set = new Set();
+            ocorrencias.forEach(o => { const a = anoDe(o); if (/^\d{4}$/.test(a)) set.add(a); });
+            return Array.from(set);
+        }
+        // 2022 a 2040 + qualquer ano fora dessa faixa que exista nos registros
+        function listarAnos() {
+            const set = new Set(anosComDados());
+            for (let a = ANO_MIN; a <= ANO_MAX; a++) set.add(String(a));
+            return Array.from(set).sort();
+        }
+        function anosSelecionados(id) {
+            return Array.from(document.querySelectorAll(`#${id}-list input:checked`)).map(i => i.value);
+        }
+        function setAnosSelecionados(id, anos) {
+            document.querySelectorAll(`#${id}-list input`).forEach(i => { i.checked = anos.includes(i.value); });
+            atualizarRotuloAno(id);
+        }
+        function rotuloAnos(sel) {
+            if (!sel.length) return 'Todos os Anos';
+            if (sel.length <= 3) return sel.join(', ');
+            return sel.length + ' anos selecionados';
+        }
+        // Regra dos gráficos: no máximo ANOS_COMPARAR anos comparados.
+        // Mais marcados que isso => os anos mais próximos do ano atual.
+        const ANOS_COMPARAR = 4;
+        function anosParaGrafico(sel) {
+            const atual = new Date().getFullYear();
+            const cand = sel.length ? sel.slice() : Array.from(new Set([String(atual), ...anosComDados()]));
+            if (cand.length <= ANOS_COMPARAR) return cand.sort();
+            cand.sort((a, b) => Math.abs(a - atual) - Math.abs(b - atual) || a - b);
+            return cand.slice(0, ANOS_COMPARAR).sort();
+        }
+        function atualizarRotuloAno(id) {
+            const sel = anosSelecionados(id);
+            const lbl = document.getElementById(id + '-label');
+            if (lbl) lbl.textContent = rotuloAnos(sel);
+            const hint = document.getElementById(id + '-hint');
+            if (hint && id === 'dashFilterAno') {
+                const g = anosParaGrafico(sel);
+                hint.textContent = sel.length > ANOS_COMPARAR
+                    ? `Gráficos comparam no máximo ${ANOS_COMPARAR} anos: ${g.join(' x ')} (os mais próximos do ano atual). Os cards somam todos os marcados.`
+                    : (sel.length === 0
+                        ? 'Sem seleção, todos os anos entram nos cards; os gráficos comparam ' + (g.length > 1 ? g.join(' x ') : (g[0] || '—')) + '.'
+                        : `Marque até ${ANOS_COMPARAR} anos para comparar nos gráficos (acima disso, valem os mais próximos do ano atual).`);
+            }
+        }
+        function textoAnosImpressao() {
+            const sel = anosSelecionados('dashFilterAno');
+            if (!sel.length) return 'Todos';
+            const g = anosParaGrafico(sel);
+            return sel.join(', ') + (sel.length > ANOS_COMPARAR ? ` (gráficos: ${g.join(' x ')})` : '');
+        }
+        function toggleAnoPanel(id) {
+            document.querySelectorAll('[data-ano-multi]').forEach(c => {
+                const panel = document.getElementById(c.id + '-panel');
+                if (c.id === id) panel.classList.toggle('hidden'); else panel.classList.add('hidden');
+            });
+        }
+        function onAnoChange(id) {
+            atualizarRotuloAno(id);
+            if (id === 'dashFilterAno') renderDashboard(); else renderOverviewMap();
+        }
+        function limparAnos(id) {
+            setAnosSelecionados(id, []);
+            onAnoChange(id);
+        }
+        document.addEventListener('click', e => {
+            document.querySelectorAll('[data-ano-multi]').forEach(c => {
+                if (!c.contains(e.target)) document.getElementById(c.id + '-panel').classList.add('hidden');
+            });
+        });
+        function populateAnoSelects() {
+            const anos = listarAnos();
+            ['dashFilterAno', 'mapFilterAno'].forEach(id => {
+                const list = document.getElementById(id + '-list');
+                if (!list) return;
+                const marcados = anosSelecionados(id);
+                list.innerHTML = anos.map(a => `<label class="flex items-center gap-1 text-xs font-medium text-slate-700 px-1.5 py-1 rounded hover:bg-slate-100 cursor-pointer"><input type="checkbox" value="${a}" ${marcados.includes(a) ? 'checked' : ''} onchange="onAnoChange('${id}')" class="accent-blue-600">${a}</label>`).join('');
+                atualizarRotuloAno(id);
+            });
+        }
+        function porAno(dataset, anos) {
+            const m = {};
+            anos.forEach(a => { m[a] = dataset.filter(o => anoDe(o) === a); });
+            return m;
+        }
+        // Um dataset (série de colunas) por ano
+        function dsAnos(anos, byYear, fn, extra) {
+            return anos.map(a => Object.assign({
+                label: a,
+                data: fn(byYear[a]),
+                backgroundColor: anoCor(a),
+                borderRadius: 6
+            }, extra || {}));
+        }
+        function opcoesBarra(opt) {
+            opt = opt || {};
+            const eixo = { beginAtZero: true };
+            if (!opt.decimal) eixo.ticks = { precision: 0 };
+            const o = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom' } },
+                scales: {}
+            };
+            if (opt.fmt) o.plugins.valueLabels = { format: opt.fmt };
+            if (opt.horizontal) { o.indexAxis = 'y'; o.scales.x = eixo; } else { o.scales.y = eixo; }
+            return o;
+        }
+        function novoGrafico(canvasId, anterior, cfg) {
+            if (anterior) anterior.destroy();
+            return new Chart(document.getElementById(canvasId).getContext("2d"), cfg);
+        }
+        function pinIcon(cor) {
+            return L.divIcon({
+                className: 'bdi-pin',
+                html: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg"><path d="M15 1C7.3 1 1 7.3 1 15c0 10.5 14 26 14 26s14-15.5 14-26C29 7.3 22.7 1 15 1z" fill="${cor}" stroke="rgba(0,0,0,0.45)" stroke-width="1.5"/><circle cx="15" cy="15" r="5.5" fill="#ffffff"/></svg>`,
+                iconSize: [30, 42],
+                iconAnchor: [15, 41],
+                popupAnchor: [0, -36]
+            });
+        }
+
+        // ======================================================================
         // RÓTULOS DE DADOS NOS GRÁFICOS (valor exato nas barras; valor e % na rosca)
         // ======================================================================
         const fmtNum = (v, dec) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec === undefined ? 2 : dec });
@@ -1244,6 +1412,7 @@
                 return e.value ? e.options[e.selectedIndex].text : "Todos";
             };
             const filtros = [
+                `<b>Ano:</b> ${escHtml(textoAnosImpressao())}`,
                 `<b>Mês:</b> ${escHtml(sel("dashFilterMes"))}`,
                 `<b>Município:</b> ${escHtml(sel("dashFilterMunicipio"))}`,
                 `<b>Bairro:</b> ${escHtml(sel("dashFilterBairro"))}`,
@@ -1280,11 +1449,17 @@
                 ["Distribuição por Faixa Horária", chartTimeInstance],
                 ["Top Naturezas de Crimes/Ocorrências", chartNaturezaInstance],
                 ["Pessoas Presas / Conduzidas por Município", chartPresosInstance],
-                ["Detalhamento de Apreensões de Armas", chartArmasInstance],
+                ["Detalhamento de Apreensões de Armas", chartArmasInstance]
+            ].filter(([, inst]) => inst).map(([t, inst]) =>
+                `<div class="chart"><div class="ct">${escHtml(t)}</div><img src="${inst.toBase64Image()}" alt=""></div>`
+            ).join("");
+
+            // Drogas e Veículos/Motos: largura total da página, um abaixo do outro (como no dashboard)
+            const graficosLargos = [
                 ["Detalhamento de Apreensões de Drogas (kg)", chartDrogasInstance],
                 ["Detalhamento de Ocorrências de Veículos e Motos", chartVeiculosInstance]
             ].filter(([, inst]) => inst).map(([t, inst]) =>
-                `<div class="chart"><div class="ct">${escHtml(t)}</div><img src="${inst.toBase64Image()}" alt=""></div>`
+                `<div class="chart-wide"><div class="ct">${escHtml(t)}</div><img src="${inst.toBase64Image()}" alt=""></div>`
             ).join("");
 
             const css = PRINT_CSS_BASE + `
@@ -1299,9 +1474,11 @@
                 .charts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
                 .chart{border:1px solid #cbd5e1;border-radius:6px;padding:6px;break-inside:avoid}
                 .chart img{width:100%;height:auto;display:block;margin-top:4px}
+                .chart-wide{display:block;width:100%;margin-top:10px;border:1px solid #cbd5e1;border-radius:6px;padding:6px;break-inside:avoid;page-break-inside:avoid}
+                .chart-wide img{width:100%;height:auto;display:block;margin-top:4px}
             `;
             const body = printHeader("Relatório Estatístico", [`<b>Filtros aplicados</b> — ` + filtros.join(" &nbsp;|&nbsp; ")]) +
-                `<div class="cards">${cards}</div><div class="charts">${graficos}</div>
+                `<div class="cards">${cards}</div><div class="charts">${graficos}</div>${graficosLargos}
                 <div class="foot">BDI - Banco de Dados Online | 2º BMT – PMMA</div>`;
             printHtml("Relatório Estatístico - BDI", css, body);
         }
@@ -1436,6 +1613,7 @@
             recomputeMunicipios();
             const key = JSON.stringify(municipios);
             if (key !== lastMunKey) { lastMunKey = key; renderMunicipiosSelect(); }
+            populateAnoSelects();
             renderDashboard();
             renderTable();
             const mv = document.getElementById("sec-mapView");
@@ -1557,6 +1735,9 @@
         }
 
         function initFormSelectors() {
+            // Populate Year Selects
+            populateAnoSelects();
+
             // Populate Month Selects
             const dashMes = document.getElementById("dashFilterMes");
             dashMes.innerHTML = '<option value="">Todos os Meses</option>' + 
@@ -1946,6 +2127,7 @@
         // ==========================================
 
         function resetDashFilters() {
+            setAnosSelecionados("dashFilterAno", []);
             document.getElementById("dashFilterMes").value = "";
             document.getElementById("dashFilterMunicipio").value = "";
             document.getElementById("dashFilterBairro").value = "";
@@ -1954,18 +2136,23 @@
         }
 
         function renderDashboard() {
+            const selAnos = anosSelecionados("dashFilterAno");
             const filterMes = document.getElementById("dashFilterMes").value;
             const filterMun = document.getElementById("dashFilterMunicipio").value;
             const filterNat = document.getElementById("dashFilterNatureza").value;
             const filterBai = document.getElementById("dashFilterBairro").value;
+            // Gráficos comparam no máximo 4 anos (ver anosParaGrafico)
+            const anosGraf = anosParaGrafico(selAnos);
+            atualizarRotuloAno("dashFilterAno");
 
             // Filter Dataset
             const dataset = ocorrencias.filter(o => {
+                const matchAno = !selAnos.length || selAnos.includes(anoDe(o));
                 const matchMes = !filterMes || (o.data && o.data.split('-')[1] === filterMes);
                 const matchMun = !filterMun || o.municipio === filterMun;
                 const matchNat = !filterNat || (o.naturezas && o.naturezas.includes(filterNat));
                 const matchBai = !filterBai || o.bairro === filterBai;
-                return matchMes && matchMun && matchNat && matchBai;
+                return matchAno && matchMes && matchMun && matchNat && matchBai;
             });
 
             // Stat 1: Total
@@ -2044,280 +2231,169 @@
             document.getElementById("stat-top-bairro-count").innerText = `${maxCount} reg.`;
 
             // Render Filtered Charts
-            renderChartMeses(dataset);
-            renderChartDiasSemana(dataset);
-            renderChartTimeRanges(dataset);
-            renderChartNatureza(dataset);
-            renderChartPresos(dataset);
-            renderChartArmas(pist, rev, long, cas, outA);
-            renderChartDrogas(macG/1000, craG/1000, cocG/1000, outDG/1000);
-            renderChartVeiculos(vt);
+            renderChartMeses(dataset, anosGraf);
+            renderChartDiasSemana(dataset, anosGraf);
+            renderChartTimeRanges(dataset, anosGraf);
+            renderChartNatureza(dataset, anosGraf);
+            renderChartPresos(dataset, anosGraf);
+            renderChartArmas(dataset, anosGraf);
+            renderChartDrogas(dataset, anosGraf);
+            renderChartVeiculos(dataset, anosGraf);
             renderRegistroPanel();
         }
 
-        // NEW CHART: Ocorrências por Mês
-        function renderChartMeses(dataset) {
-            const counts = MESES.map(m => {
-                return dataset.filter(o => o.data && o.data.split('-')[1] === m.val).length;
-            });
-
-            const ctx = document.getElementById("chartMeses").getContext("2d");
-            if (chartMesesInstance) chartMesesInstance.destroy();
-
-            chartMesesInstance = new Chart(ctx, {
+        // Ocorrências por Mês (comparativo por ano)
+        function renderChartMeses(dataset, anos) {
+            const by = porAno(dataset, anos);
+            chartMesesInstance = novoGrafico("chartMeses", chartMesesInstance, {
                 type: 'bar',
                 data: {
                     labels: MESES.map(m => m.name),
-                    datasets: [{
-                        label: 'Ocorrências',
-                        data: counts,
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 6
-                    }]
+                    datasets: dsAnos(anos, by, ds => MESES.map(m => ds.filter(o => o.data && o.data.split('-')[1] === m.val).length))
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
+                options: opcoesBarra()
             });
         }
 
-        // NEW CHART: Ocorrências por Dia da Semana
-        function renderChartDiasSemana(dataset) {
-            const counts = [0, 0, 0, 0, 0, 0, 0]; // Dom to Sab
-
-            dataset.forEach(o => {
-                if (o.data) {
-                    // Normalize date parsing for weekday calculation
+        // Ocorrências por Dia da Semana (comparativo por ano)
+        function renderChartDiasSemana(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const contar = ds => {
+                const counts = [0, 0, 0, 0, 0, 0, 0]; // Dom a Sab
+                ds.forEach(o => {
+                    if (!o.data) return;
                     const parts = o.data.split('-');
                     if (parts.length === 3) {
-                        const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                        const dayIdx = dateObj.getDay();
+                        const dayIdx = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])).getDay();
                         if (!isNaN(dayIdx)) counts[dayIdx]++;
                     }
-                }
-            });
-
-            const ctx = document.getElementById("chartDiasSemana").getContext("2d");
-            if (chartDiasSemanaInstance) chartDiasSemanaInstance.destroy();
-
-            chartDiasSemanaInstance = new Chart(ctx, {
+                });
+                return counts;
+            };
+            chartDiasSemanaInstance = novoGrafico("chartDiasSemana", chartDiasSemanaInstance, {
                 type: 'bar',
-                data: {
-                    labels: DIAS_SEMANA,
-                    datasets: [{
-                        label: 'Ocorrências',
-                        data: counts,
-                        backgroundColor: '#6366f1',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
+                data: { labels: DIAS_SEMANA, datasets: dsAnos(anos, by, contar) },
+                options: opcoesBarra()
             });
         }
 
-        function renderChartTimeRanges(dataset) {
-            const counts = TIME_RANGES.map(range => 
-                dataset.filter(o => o.faixa === range).length
-            );
-
-            const ctx = document.getElementById("chartTimeRanges").getContext("2d");
-            if (chartTimeInstance) chartTimeInstance.destroy();
-
-            chartTimeInstance = new Chart(ctx, {
+        // Faixa Horária (comparativo por ano)
+        function renderChartTimeRanges(dataset, anos) {
+            const by = porAno(dataset, anos);
+            chartTimeInstance = novoGrafico("chartTimeRanges", chartTimeInstance, {
                 type: 'bar',
                 data: {
                     labels: TIME_RANGES,
-                    datasets: [{
-                        label: 'Ocorrências',
-                        data: counts,
-                        backgroundColor: '#2563eb',
-                        borderRadius: 6
-                    }]
+                    datasets: dsAnos(anos, by, ds => TIME_RANGES.map(r => ds.filter(o => o.faixa === r).length))
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
+                options: opcoesBarra()
             });
         }
 
-        function renderChartNatureza(dataset) {
-            const counts = {};
-            dataset.forEach(o => {
-                const nats = o.naturezas || [o.natureza];
-                nats.forEach(n => {
-                    if (n) {
-                        const natShort = n.length > 30 ? n.substring(0, 30) + '...' : n;
-                        counts[natShort] = (counts[natShort] || 0) + 1;
-                    }
+        // Top Naturezas (comparativo por ano)
+        function renderChartNatureza(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const contagem = {};   // { natureza: { ano: n } }
+            anos.forEach(a => {
+                by[a].forEach(o => {
+                    (o.naturezas || [o.natureza]).forEach(n => {
+                        if (!n) return;
+                        const nome = n.length > 30 ? n.substring(0, 30) + '...' : n;
+                        contagem[nome] = contagem[nome] || {};
+                        contagem[nome][a] = (contagem[nome][a] || 0) + 1;
+                    });
                 });
             });
-
-            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 7);
-            const labels = sorted.map(s => s[0]);
-            const data = sorted.map(s => s[1]);
-
-            const ctx = document.getElementById("chartNatureza").getContext("2d");
-            if (chartNaturezaInstance) chartNaturezaInstance.destroy();
-
-            chartNaturezaInstance = new Chart(ctx, {
+            const total = nome => Object.values(contagem[nome]).reduce((x, y) => x + y, 0);
+            const labels = Object.keys(contagem).sort((a, b) => total(b) - total(a)).slice(0, 7);
+            chartNaturezaInstance = novoGrafico("chartNatureza", chartNaturezaInstance, {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Contagem',
-                        data: data,
-                        backgroundColor: '#d97706',
+                    datasets: anos.map(a => ({
+                        label: a,
+                        data: labels.map(n => (contagem[n] || {})[a] || 0),
+                        backgroundColor: anoCor(a),
                         borderRadius: 6
-                    }]
+                    }))
                 },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
+                options: opcoesBarra({ horizontal: true })
             });
         }
 
-        function renderChartPresos(dataset) {
-            const munCounts = {};
-            dataset.forEach(o => {
-                if (o.presos && o.presos > 0) {
-                    munCounts[o.municipio] = (munCounts[o.municipio] || 0) + o.presos;
-                }
+        // Pessoas Presas por Município (comparativo por ano)
+        function renderChartPresos(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const muns = [];
+            dataset.forEach(o => { if (o.presos > 0 && !muns.includes(o.municipio)) muns.push(o.municipio); });
+            const labels = muns.length ? muns : ['Nenhum'];
+            const datasets = anos.map(a => ({
+                label: a,
+                data: muns.length ? muns.map(m => by[a].filter(o => o.municipio === m).reduce((t, o) => t + (o.presos || 0), 0)) : [0],
+                backgroundColor: anoCor(a),
+                borderRadius: 6
+            }));
+            chartPresosInstance = novoGrafico("chartPresos", chartPresosInstance, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: opcoesBarra()
             });
+        }
 
-            const labels = Object.keys(munCounts);
-            const data = Object.values(munCounts);
-
-            const ctx = document.getElementById("chartPresos").getContext("2d");
-            if (chartPresosInstance) chartPresosInstance.destroy();
-
-            chartPresosInstance = new Chart(ctx, {
+        // Armas (agora em colunas, comparativo por ano)
+        function renderChartArmas(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const campos = ['pistola', 'revolver', 'longa', 'caseira', 'outras'];
+            chartArmasInstance = novoGrafico("chartArmas", chartArmasInstance, {
                 type: 'bar',
                 data: {
-                    labels: labels.length ? labels : ['Nenhum'],
-                    datasets: [{
-                        label: 'Pessoas Presas',
-                        data: data.length ? data : [0],
-                        backgroundColor: '#9333ea',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
-            });
-        }
-
-        function renderChartArmas(pist, rev, long, cas, out) {
-            const ctx = document.getElementById("chartArmas").getContext("2d");
-            if (chartArmasInstance) chartArmasInstance.destroy();
-
-            chartArmasInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
                     labels: ['Pistola', 'Revólver', 'Arma Longa', 'Arma Caseira', 'Outras'],
-                    datasets: [{
-                        data: [pist, rev, long, cas, out],
-                        backgroundColor: ['#dc2626', '#ea580c', '#f59e0b', '#84cc16', '#64748b']
-                    }]
+                    datasets: dsAnos(anos, by, ds => campos.map(c => ds.reduce((t, o) => t + (o.armas?.[c] || 0), 0)))
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: 30 },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                generateLabels(chart) {
-                                    const ds = chart.data.datasets[0];
-                                    const total = ds.data.reduce((a, b) => a + (+b || 0), 0);
-                                    return chart.data.labels.map((nome, i) => {
-                                        const v = +ds.data[i] || 0;
-                                        const pct = total ? v / total * 100 : 0;
-                                        const cor = ds.backgroundColor[i];
-                                        return {
-                                            text: `${nome}: ${v} (${fmtNum(pct, 1)}%)`,
-                                            fillStyle: cor,
-                                            strokeStyle: cor,
-                                            lineWidth: 0,
-                                            fontColor: '#334155',
-                                            hidden: !chart.getDataVisibility(i),
-                                            index: i
-                                        };
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
+                options: opcoesBarra()
             });
         }
 
-        function renderChartDrogas(macKg, craKg, cocKg, outKg) {
-            const ctx = document.getElementById("chartDrogas").getContext("2d");
-            if (chartDrogasInstance) chartDrogasInstance.destroy();
-
-            chartDrogasInstance = new Chart(ctx, {
+        // Drogas em kg (comparativo por ano)
+        function renderChartDrogas(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const campos = ['maconha', 'crack', 'cocaina', 'outras'];
+            chartDrogasInstance = novoGrafico("chartDrogas", chartDrogasInstance, {
                 type: 'bar',
                 data: {
                     labels: ['Maconha', 'Crack', 'Cocaína', 'Outras'],
-                    datasets: [{
-                        label: 'Quilogramas (kg)',
-                        data: [
-                            parseFloat(macKg.toFixed(2)), 
-                            parseFloat(craKg.toFixed(2)), 
-                            parseFloat(cocKg.toFixed(2)), 
-                            parseFloat(outKg.toFixed(2))
-                        ],
-                        backgroundColor: '#10b981',
-                        borderRadius: 6
-                    }]
+                    datasets: dsAnos(anos, by, ds => campos.map(c => parseFloat((ds.reduce((t, o) => t + (o.drogas?.[c] || 0), 0) / 1000).toFixed(2))))
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, valueLabels: { format: v => fmtNum(v, 2) + ' kg' } },
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: opcoesBarra({ decimal: true, fmt: v => fmtNum(v, 2) + ' kg' })
             });
         }
 
-        function renderChartVeiculos(vt) {
-            const ctx = document.getElementById("chartVeiculos").getContext("2d");
-            if (chartVeiculosInstance) chartVeiculosInstance.destroy();
-            chartVeiculosInstance = new Chart(ctx, {
+        // Veículos e Motos (comparativo por ano: carros e motos de cada ano)
+        function renderChartVeiculos(dataset, anos) {
+            const by = porAno(dataset, anos);
+            const soma = (ds, grupo, campo) => ds.reduce((t, o) => t + (o[grupo]?.[campo] || 0), 0);
+            const escurecer = (hex, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.substr(i, 2), 16) * (1 - f)).toString(16).padStart(2, '0')).join('');
+            const coresCarro = { '2026': '#0ea5e9', '2027': '#ef4444' };
+            const coresMoto = { '2026': '#6366f1', '2027': '#f97316' };
+            const datasets = [];
+            anos.forEach(a => {
+                datasets.push({
+                    label: 'Carros/Veículos ' + a,
+                    data: [soma(by[a], 'veiculos', 'furtado'), soma(by[a], 'veiculos', 'roubado'), soma(by[a], 'veiculos', 'localizado'), soma(by[a], 'veiculos', 'recuperado')],
+                    backgroundColor: coresCarro[a] || anoCor(a),
+                    borderRadius: 6
+                });
+                datasets.push({
+                    label: 'Motos ' + a,
+                    data: [soma(by[a], 'motos', 'furtada'), soma(by[a], 'motos', 'roubada'), soma(by[a], 'motos', 'localizada'), soma(by[a], 'motos', 'recuperada')],
+                    backgroundColor: coresMoto[a] || escurecer(anoCor(a), 0.35),
+                    borderRadius: 6
+                });
+            });
+            chartVeiculosInstance = novoGrafico("chartVeiculos", chartVeiculosInstance, {
                 type: 'bar',
-                data: {
-                    labels: ['Furtados', 'Roubados', 'Localizados', 'Recuperados'],
-                    datasets: [
-                        { label: 'Carros/Veículos', data: [vt.vf, vt.vr, vt.vl, vt.vc], backgroundColor: '#0ea5e9', borderRadius: 6 },
-                        { label: 'Motos', data: [vt.mf, vt.mr, vt.ml, vt.mc], backgroundColor: '#6366f1', borderRadius: 6 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'bottom' } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                }
+                data: { labels: ['Furtados', 'Roubados', 'Localizados', 'Recuperados'], datasets },
+                options: opcoesBarra()
             });
         }
 
@@ -2341,6 +2417,7 @@
 
             overviewMarkersGroup.clearLayers();
 
+            const selAnosMapa = anosSelecionados("mapFilterAno");
             const filterMes = document.getElementById("mapFilterMes").value;
             const filterM = document.getElementById("mapFilterMunicipio").value;
             const filterB = document.getElementById("mapFilterBairro").value;
@@ -2348,19 +2425,24 @@
             const filterN = document.getElementById("mapFilterNatureza").value;
 
             const filtered = ocorrencias.filter(o => {
+                const matchAno = !selAnosMapa.length || selAnosMapa.includes(anoDe(o));
                 const matchMes = !filterMes || (o.data && o.data.split('-')[1] === filterMes);
                 const matchM = !filterM || o.municipio === filterM;
                 const matchB = !filterB || o.bairro === filterB;
                 const matchF = !filterF || o.faixa === filterF;
                 const matchN = !filterN || (o.naturezas || [o.natureza]).includes(filterN);
-                return matchMes && matchM && matchB && matchF && matchN;
+                return matchAno && matchMes && matchM && matchB && matchF && matchN;
             });
 
             const bounds = [];
 
             filtered.forEach(o => {
                 if (o.lat && o.lng) {
-                    const marker = L.marker([o.lat, o.lng]);
+                    // 2026 = pin azul padrão; 2027 = vermelho; outros anos = cor própria
+                    const anoO = anoDe(o);
+                    const marker = (anoO && anoO !== '2026')
+                        ? L.marker([o.lat, o.lng], { icon: pinIcon(anoO === '2027' ? '#dc2626' : anoCor(anoO)) })
+                        : L.marker([o.lat, o.lng]);
                     
                     const totalArmas = (o.armas?.pistola||0)+(o.armas?.revolver||0)+(o.armas?.longa||0)+(o.armas?.caseira||0)+(o.armas?.outras||0);
                     const totalDrogasG = (o.drogas?.maconha||0)+(o.drogas?.crack||0)+(o.drogas?.cocaina||0)+(o.drogas?.outras||0);
@@ -2397,6 +2479,7 @@
         }
 
         function resetMapFilters() {
+            setAnosSelecionados("mapFilterAno", []);
             document.getElementById("mapFilterMes").value = "";
             document.getElementById("mapFilterMunicipio").value = "";
             document.getElementById("mapFilterBairro").value = "";
