@@ -131,7 +131,7 @@
             <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex flex-wrap gap-x-4 gap-y-3 items-center">
                 <div class="flex items-center gap-2 shrink-0">
                     <i class="fa-solid fa-filter text-blue-600 text-lg"></i>
-                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Filtros</h2>
+                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Filtros do Dashboard</h2>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center flex-1 min-w-0">
                     <!-- Filtro por Ano -->
@@ -1246,6 +1246,31 @@
             if (!s) return NaN;
             if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
             return parseFloat(s);
+        }
+
+        // Limites aproximados do Maranhão. Coordenadas fora disso são tratadas como erro de digitação.
+        const GEO_LAT = [-10.3, -1.0], GEO_LNG = [-48.8, -41.7];
+        const GEO_PADRAO = { lat: -5.5262, lng: -47.4777 };
+        function geoOk(lat, lng) {
+            return Number.isFinite(lat) && Number.isFinite(lng) &&
+                   lat >= GEO_LAT[0] && lat <= GEO_LAT[1] && lng >= GEO_LNG[0] && lng <= GEO_LNG[1];
+        }
+        // Retorna {lat, lng, status}: 'ok' | 'corrigida' (vírgula deslocada) | 'invalida' (usa o centro padrão)
+        function sanitizarCoord(lat, lng) {
+            if (geoOk(lat, lng)) return { lat, lng, status: 'ok' };
+            const ajusta = (v, [min, max]) => {
+                if (!Number.isFinite(v)) return NaN;
+                for (const f of [1, 0.1, 10, 0.01, 100]) {
+                    const c = v * f;
+                    if (c >= min && c <= max) return c;
+                }
+                return NaN;
+            };
+            const la = ajusta(lat, GEO_LAT), ln = ajusta(lng, GEO_LNG);
+            if (Number.isFinite(la) && Number.isFinite(ln)) {
+                return { lat: parseFloat(la.toFixed(7)), lng: parseFloat(ln.toFixed(7)), status: 'corrigida' };
+            }
+            return { lat: GEO_PADRAO.lat, lng: GEO_PADRAO.lng, status: 'invalida' };
         }
 
         const MESES_PT = { janeiro:1, fevereiro:2, marco:3, "março":3, abril:4, maio:5, junho:6, julho:7, agosto:8, setembro:9, outubro:10, novembro:11, dezembro:12,
@@ -2437,7 +2462,7 @@
             const bounds = [];
 
             filtered.forEach(o => {
-                if (o.lat && o.lng) {
+                if (geoOk(Number(o.lat), Number(o.lng))) {
                     // 2026 = pin azul padrão; 2027 = vermelho; outros anos = cor própria
                     const anoO = anoDe(o);
                     const marker = (anoO && anoO !== '2026')
@@ -2622,6 +2647,7 @@
                     let addedCount = 0;
                     let updatedCount = 0;
                     const invalidDates = [];
+                    const geoProblemas = [];
                     const importedRecords = [];
 
                     for (let i = 1; i < lines.length; i++) {
@@ -2668,8 +2694,14 @@
                         const coc = parseNum(cols[14 + colOffset + drugShift]) || 0;
                         const outD = parseNum(cols[15 + colOffset + drugShift]) || 0;
 
-                        const lat = parseNum(cols[16 + colOffset + drugShift]) || -5.5262;
-                        const lng = parseNum(cols[17 + colOffset + drugShift]) || -47.4777;
+                        const latRaw = parseNum(cols[16 + colOffset + drugShift]) || GEO_PADRAO.lat;
+                        const lngRaw = parseNum(cols[17 + colOffset + drugShift]) || GEO_PADRAO.lng;
+                        const geo = sanitizarCoord(latRaw, lngRaw);
+                        const lat = geo.lat, lng = geo.lng;
+                        if (geo.status !== 'ok') {
+                            geoProblemas.push(`linha ${i + 1} (ID ${id}): ${latRaw} ; ${lngRaw} → ` +
+                                (geo.status === 'corrigida' ? `corrigida para ${lat} ; ${lng}` : 'inválida, usado o centro padrão'));
+                        }
                         const obs = cols[18 + colOffset + drugShift] || "";
 
                         const ex = (colOffset === 4 && cols.length >= 32) ? 24 : -1;
@@ -2730,6 +2762,10 @@
                     if (invalidDates.length) {
                         msg += `\n\n⚠ ${invalidDates.length} linha(s) ignorada(s) por data não reconhecida:\n` +
                                invalidDates.slice(0, 10).join('\n') + (invalidDates.length > 10 ? '\n...' : '');
+                    }
+                    if (geoProblemas.length) {
+                        msg += `\n\n⚠ ${geoProblemas.length} linha(s) com coordenadas fora do Maranhão (revise no CSV):\n` +
+                               geoProblemas.slice(0, 10).join('\n') + (geoProblemas.length > 10 ? '\n...' : '');
                     }
                     alert(msg);
                     event.target.value = ''; // Reset input
