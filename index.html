@@ -55,6 +55,19 @@
             z-index: 1;
         }
     </style>
+
+    <style>
+        /* Mapa expandido (tela cheia) */
+        #sec-mapView.map-expanded{position:fixed;inset:0;z-index:2000;background:#f1f5f9;padding:10px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+        #sec-mapView.map-expanded > *{margin-top:0 !important}
+        #sec-mapView.map-expanded .map-desc{display:none}
+        #sec-mapView.map-expanded #mapFiltros{padding:10px 14px}
+        #sec-mapView.map-expanded #mapWrap{flex:1;min-height:0;display:flex}
+        #sec-mapView.map-expanded #overviewMap{height:100% !important;flex:1}
+        /* Linhas dinâmicas do cadastro */
+        .obj-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #cbd5e1;border-radius:9999px;background:#fff;font-size:12px;font-weight:600;color:#334155;cursor:pointer;user-select:none}
+        .obj-chip:has(input:checked){background:#ede9fe;border-color:#8b5cf6;color:#5b21b6}
+    </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
@@ -131,7 +144,7 @@
             <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex flex-wrap gap-x-4 gap-y-3 items-center">
                 <div class="flex items-center gap-2 shrink-0">
                     <i class="fa-solid fa-filter text-blue-600 text-lg"></i>
-                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Filtros do Dashboard</h2>
+                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Filtros</h2>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center flex-1 min-w-0">
                     <!-- Filtro por Ano -->
@@ -179,25 +192,26 @@
 
             <!-- Summary Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ocorrências</p>
-                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1" id="stat-total-occurrences">0</h3>
-                        <p class="text-[11px] text-blue-600 mt-1 font-medium"><i class="fa-solid fa-database"></i> Registradas</p>
+                <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex flex-col justify-between gap-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ocorrências</p>
+                            <h3 class="text-2xl font-extrabold text-slate-800 mt-1" id="stat-total-occurrences">0</h3>
+                            <p class="text-[11px] text-blue-600 mt-1 font-medium"><i class="fa-solid fa-database"></i> Registradas</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <i class="fa-solid fa-file-invoice text-xl"></i>
+                        </div>
                     </div>
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                        <i class="fa-solid fa-file-invoice text-xl"></i>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pessoas Presas</p>
-                        <h3 class="text-2xl font-extrabold text-purple-600 mt-1" id="stat-total-presos">0</h3>
-                        <p class="text-[11px] text-purple-700 mt-1 font-medium"><i class="fa-solid fa-user-lock"></i> Conduzidos/Presos</p>
-                    </div>
-                    <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                        <i class="fa-solid fa-user-shield text-xl"></i>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-200">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pessoas Presas</p>
+                            <h3 class="text-2xl font-extrabold text-purple-600 mt-1" id="stat-total-presos">0</h3>
+                            <p class="text-[11px] text-purple-700 mt-1 font-medium"><i class="fa-solid fa-user-lock"></i> Conduzidos/Presos</p>
+                        </div>
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <i class="fa-solid fa-user-shield text-xl"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -238,7 +252,6 @@
                         <li class="flex justify-between"><span class="text-slate-500">Cocaína/Outras</span><span class="font-bold text-slate-800" id="stat-d-cocaina">0 g</span></li>
                     </ul>
                 </div>
-
                 <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300">
                     <div class="flex items-start justify-between">
                         <div>
@@ -256,6 +269,33 @@
                         <li class="flex justify-between"><span class="text-slate-500">Furtados</span><span class="font-bold text-slate-800" id="stat-v-furtados">0</span></li>
                         <li class="flex justify-between"><span class="text-slate-500">Localizados</span><span class="font-bold text-slate-800" id="stat-v-localizados">0</span></li>
                     </ul>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300">
+                    <div class="flex items-start justify-between">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Valores &amp; Objetos<br>Apreendidos</p>
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <i class="fa-solid fa-sack-dollar text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 rounded-xl border border-emerald-300 bg-emerald-50 p-2.5">
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1"><i class="fa-solid fa-sack-dollar"></i> Valores apreendidos</p>
+                        <ul class="mt-1.5 space-y-1 text-[11px]">
+                            <li class="flex justify-between"><span class="text-slate-600">Reais (R$)</span><span class="font-extrabold text-emerald-700" id="stat-val-brl">R$ 0,00</span></li>
+                            <li class="flex justify-between"><span class="text-slate-600">Moeda estrangeira</span><span class="font-extrabold text-emerald-700" id="stat-val-est">0,00</span></li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 rounded-xl border border-violet-300 bg-violet-50 p-2.5">
+                        <div class="flex justify-between items-center">
+                            <p class="text-[10px] font-extrabold uppercase tracking-wider text-violet-700 flex items-center gap-1"><i class="fa-solid fa-box-open"></i> Objetos apreendidos</p>
+                            <span class="font-extrabold text-violet-700 text-sm" id="stat-obj-total">0</span>
+                        </div>
+                        <ul class="mt-1.5 space-y-1 text-[11px]">
+                            <li class="flex justify-between"><span class="text-slate-600"><i class="fa-solid fa-mobile-screen-button text-violet-500"></i> Celulares</span><span class="font-bold text-slate-800" id="stat-obj-celular">0</span></li>
+                            <li class="flex justify-between"><span class="text-slate-600"><i class="fa-solid fa-scale-balanced text-violet-500"></i> Balanças</span><span class="font-bold text-slate-800" id="stat-obj-balanca">0</span></li>
+                            <li class="flex justify-between"><span class="text-slate-600"><i class="fa-solid fa-layer-group text-violet-500"></i> Prensas</span><span class="font-bold text-slate-800" id="stat-obj-prensa">0</span></li>
+                            <li class="flex justify-between"><span class="text-slate-600"><i class="fa-solid fa-ellipsis text-violet-500"></i> Outros</span><span class="font-bold text-slate-800" id="stat-obj-outros">0</span></li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="bg-white p-4 rounded-2xl shadow-[0_10px_22px_-4px_rgba(15,23,42,0.6)] border border-slate-300 flex items-center justify-between">
@@ -404,13 +444,13 @@
 
         <!-- TAB 2: MAPA GERAL -->
         <section id="sec-mapView" class="hidden space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+            <div id="mapFiltros" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-map text-blue-600"></i> Mapa Georreferenciado das Ocorrências
                     </h2>
-                    <p class="text-xs text-slate-500">Visualização espacial dos pontos registrados com filtros</p>
-                    <p class="text-xs text-slate-600 mt-1 flex flex-wrap gap-x-4 gap-y-1 font-semibold">
+                    <p class="text-xs text-slate-500 map-desc">Visualização espacial dos pontos registrados com filtros</p>
+                    <p class="text-xs text-slate-600 mt-1 flex flex-wrap gap-x-4 gap-y-1 font-semibold map-desc">
                         <span><i class="fa-solid fa-location-dot text-blue-600"></i> 2026</span>
                         <span><i class="fa-solid fa-location-dot text-red-600"></i> 2027</span>
                         <span class="text-slate-500 font-medium">Demais anos: cor própria</span>
@@ -449,10 +489,13 @@
                     <button onclick="resetMapFilters()" class="px-3 py-1.5 text-xs font-medium bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-lg transition-all">
                         Limpar Filtros
                     </button>
+                    <button type="button" id="btnMapExpand" onclick="toggleMapExpand()" class="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all flex items-center gap-1.5">
+                        <i id="btnMapExpandIcon" class="fa-solid fa-expand"></i><span id="btnMapExpandLabel">Expandir</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div id="mapWrap" class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div id="overviewMap" class="w-full h-[600px] rounded-xl"></div>
             </div>
         </section>
@@ -520,7 +563,12 @@
 
                             <!-- Bairro -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Bairro *</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs font-bold text-slate-700">Bairro *</label>
+                                    <button type="button" onclick="openAddBairroModal()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Novo Bairro
+                                    </button>
+                                </div>
                                 <select id="input-bairro" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
                                     <option value="">Selecione o Bairro...</option>
                                 </select>
@@ -665,6 +713,17 @@
                         </div>
                     </div>
 
+                    <!-- Section 5A: Valores Apreendidos -->
+                    <div class="border-b border-slate-100 pb-6">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-sack-dollar text-emerald-600"></i> Valores Apreendidos (Reais ou Moeda Estrangeira)
+                        </h3>
+                        <div id="valores-lista" class="space-y-2"></div>
+                        <button type="button" onclick="addValorRow()" class="mt-3 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-circle-plus text-sm"></i> Adicionar outro valor
+                        </button>
+                    </div>
+
                     <!-- Section 5B: Motos e Veículos -->
                     <div class="border-b border-slate-100 pb-6">
                         <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -709,6 +768,17 @@
                                 <input type="number" min="0" id="veic-recuperado" value="0" class="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 outline-none text-center font-bold">
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Section 5C: Objetos Apreendidos -->
+                    <div class="border-b border-slate-100 pb-6">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-box-open text-violet-600"></i> Objetos Apreendidos (quantidade)
+                        </h3>
+                        <div id="objetos-lista" class="space-y-2"></div>
+                        <button type="button" onclick="addObjetoRow()" class="mt-3 px-3 py-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-lg flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-circle-plus text-sm"></i> Adicionar outro objeto
+                        </button>
                     </div>
 
                     <!-- Section 6: Observações Adicionais -->
@@ -804,6 +874,28 @@
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeAddMunicipioModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
                 <button onclick="confirmAddMunicipio()" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Bairro -->
+    <div id="modalBairro" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot text-blue-600"></i> Cadastrar Novo Bairro
+                </h3>
+                <button onclick="closeAddBairroModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Bairro *</label>
+                <input type="text" id="new-bairro-name" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmAddBairro();}" placeholder="Ex: VILA NOVA" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddBairroModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
+                <button onclick="confirmAddBairro()" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Adicionar</button>
             </div>
         </div>
     </div>
@@ -1212,6 +1304,8 @@
 
             if (!CLOUD_MODE) loadLocalStorage();
             initFormSelectors();
+            resetValoresObjetos();
+            document.getElementById("formOcorrencia").addEventListener("reset", () => setTimeout(() => resetValoresObjetos(), 0));
             initPickerMap();
             if (!CLOUD_MODE) initSampleDataIfEmpty();
             setSyncStatus(CLOUD_MODE ? "connecting" : "local");
@@ -1229,6 +1323,191 @@
         // ==========================================
         // HELPERS: DROGAS, DATAS, PAINEL DE REGISTROS
         // ==========================================
+        // ==========================================
+        // VALORES E OBJETOS APREENDIDOS
+        // ==========================================
+        const OBJ_TIPOS = { celular: "Celulares", balanca: "Balanças", prensa: "Prensas", outros: "Outros" };
+
+        function somaValores(o) {
+            let brl = 0, est = 0;
+            (o.valores || []).forEach(v => {
+                const n = Number(v.valor) || 0;
+                if (v.tipo === "EST") est += n; else brl += n;
+            });
+            return { brl, est };
+        }
+        function somaObjetos(o) {
+            const t = { celular: 0, balanca: 0, prensa: 0, outros: 0 };
+            (o.objetos || []).forEach(x => { if (t[x.tipo] !== undefined) t[x.tipo] += Number(x.qtd) || 0; });
+            return t;
+        }
+        function totalObjetos(o) {
+            const t = somaObjetos(o);
+            return t.celular + t.balanca + t.prensa + t.outros;
+        }
+        function fmtBRL(n) { return (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+        function fmtEst(n) { return (Number(n) || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function linhasValores(o) {
+            const s = somaValores(o), r = [];
+            if (s.brl > 0) r.push(`Valores: ${fmtBRL(s.brl)}`);
+            if (s.est > 0) r.push(`Valores (moeda estrangeira): ${fmtEst(s.est)}`);
+            return r;
+        }
+        function linhasObjetos(o) {
+            const t = somaObjetos(o);
+            const partes = Object.keys(OBJ_TIPOS).filter(k => t[k] > 0).map(k => `${t[k]} ${OBJ_TIPOS[k].toLowerCase()}`);
+            return partes.length ? [`Objetos: ${partes.join(", ")}`] : [];
+        }
+        function badgesValoresObjetos(o) {
+            const s = somaValores(o), out = [];
+            if (s.brl > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full mr-1"><i class="fa-solid fa-sack-dollar text-[10px]"></i> ${fmtBRL(s.brl)}</span>`);
+            if (s.est > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full mr-1"><i class="fa-solid fa-coins text-[10px]"></i> ${fmtEst(s.est)} (estrang.)</span>`);
+            const to = totalObjetos(o);
+            if (to > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-violet-100 text-violet-800 rounded-full mr-1"><i class="fa-solid fa-box-open text-[10px]"></i> ${to} objeto(s)</span>`);
+            return out.join("");
+        }
+
+        // ----- Linhas dinâmicas no cadastro -----
+        let objRowSeq = 0;
+        const INPUT_CLS = "px-2 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 outline-none bg-white";
+
+        function addValorRow(v) {
+            const lista = document.getElementById("valores-lista");
+            const row = document.createElement("div");
+            row.className = "valor-row flex flex-wrap items-center gap-2 bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100";
+            const tipo = v && v.tipo === "EST" ? "EST" : "BRL";
+            row.innerHTML = `
+                <span class="val-sym text-sm font-extrabold text-emerald-700 w-9 text-center">${tipo === "EST" ? "Estr." : "R$"}</span>
+                <input type="number" min="0" step="0.01" placeholder="0,00" value="${v && v.valor ? Number(v.valor) : ""}" class="valor-input w-40 ${INPUT_CLS} focus:ring-emerald-500 text-center font-bold">
+                <select class="valor-tipo ${INPUT_CLS} focus:ring-emerald-500 font-medium text-xs" onchange="this.parentElement.querySelector('.val-sym').textContent = this.value === 'EST' ? 'Estr.' : 'R$'">
+                    <option value="BRL"${tipo === "BRL" ? " selected" : ""}>Real (R$)</option>
+                    <option value="EST"${tipo === "EST" ? " selected" : ""}>Moeda estrangeira</option>
+                </select>
+                <button type="button" onclick="removerLinha(this, 'valor')" title="Remover" class="ml-auto p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>`;
+            lista.appendChild(row);
+        }
+
+        function addObjetoRow(x) {
+            const lista = document.getElementById("objetos-lista");
+            const n = ++objRowSeq;
+            const row = document.createElement("div");
+            row.className = "obj-row flex flex-wrap items-center gap-2 bg-violet-50/60 p-2.5 rounded-xl border border-violet-100";
+            const chips = Object.keys(OBJ_TIPOS).map(k => `
+                <label class="obj-chip"><input type="checkbox" class="obj-tipo accent-violet-600" value="${k}"${x && x.tipo === k ? " checked" : ""} onchange="selecionarUmTipo(this)"> ${OBJ_TIPOS[k]}</label>`).join("");
+            row.innerHTML = `
+                <input type="number" min="0" step="1" placeholder="Qtd." value="${x && x.qtd ? Number(x.qtd) : ""}" class="obj-qtd w-24 ${INPUT_CLS} focus:ring-violet-500 text-center font-bold">
+                <div class="flex flex-wrap gap-1.5">${chips}</div>
+                <button type="button" onclick="removerLinha(this, 'objeto')" title="Remover" class="ml-auto p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>`;
+            lista.appendChild(row);
+        }
+
+        // Em cada linha, marcar um tipo desmarca os outros
+        function selecionarUmTipo(cb) {
+            if (!cb.checked) return;
+            cb.closest(".obj-row").querySelectorAll(".obj-tipo").forEach(o => { if (o !== cb) o.checked = false; });
+        }
+
+        function removerLinha(btn, kind) {
+            const row = btn.closest(kind === "valor" ? ".valor-row" : ".obj-row");
+            const lista = row.parentElement;
+            row.remove();
+            if (!lista.children.length) { kind === "valor" ? addValorRow() : addObjetoRow(); }
+        }
+
+        function resetValoresObjetos(occ) {
+            document.getElementById("valores-lista").innerHTML = "";
+            document.getElementById("objetos-lista").innerHTML = "";
+            const vs = (occ && occ.valores) || [], os = (occ && occ.objetos) || [];
+            vs.length ? vs.forEach(addValorRow) : addValorRow();
+            os.length ? os.forEach(addObjetoRow) : addObjetoRow();
+        }
+
+        function coletarValores() {
+            return Array.from(document.querySelectorAll("#valores-lista .valor-row"))
+                .map(r => ({ valor: parseFloat(r.querySelector(".valor-input").value) || 0, tipo: r.querySelector(".valor-tipo").value }))
+                .filter(v => v.valor > 0);
+        }
+
+        function coletarObjetos() {
+            const lista = [];
+            let erro = false;
+            document.querySelectorAll("#objetos-lista .obj-row").forEach(r => {
+                const qtd = parseInt(r.querySelector(".obj-qtd").value) || 0;
+                const marcado = r.querySelector(".obj-tipo:checked");
+                if (qtd > 0 && !marcado) { erro = true; return; }
+                if (qtd > 0) lista.push({ qtd, tipo: marcado.value });
+            });
+            return { lista, erro };
+        }
+
+        // ==========================================
+        // BAIRROS (lista fixa + novos cadastrados manualmente)
+        // ==========================================
+        let bairrosExtra = [];
+        let lastBairroKey = null;
+
+        function listarBairros() {
+            const set = new Set();
+            [...BAIRROS_CLEAN, ...bairrosExtra, ...ocorrencias.map(o => o.bairro)].forEach(b => {
+                const n = (b || "").trim();
+                if (n) set.add(n);
+            });
+            return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+        }
+
+        function renderBairrosSelect() {
+            const lista = listarBairros();
+            const opts = lista.map(b => `<option value="${escHtml(b)}">${escHtml(b)}</option>`).join("");
+            const setSel = (id, html) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const cur = el.value;
+                el.innerHTML = html;
+                if (cur && lista.includes(cur)) el.value = cur;
+            };
+            setSel("input-bairro", '<option value="">Selecione o Bairro...</option>' + opts);
+            setSel("mapFilterBairro", '<option value="">Todos os Bairros</option>' + opts);
+            setSel("dashFilterBairro", '<option value="">Todos os Bairros</option>' + opts);
+        }
+
+        function openAddBairroModal() {
+            document.getElementById("modalBairro").classList.remove("hidden");
+            document.getElementById("new-bairro-name").focus();
+        }
+        function closeAddBairroModal() {
+            document.getElementById("modalBairro").classList.add("hidden");
+            document.getElementById("new-bairro-name").value = "";
+        }
+        function confirmAddBairro() {
+            const raw = document.getElementById("new-bairro-name").value.trim().replace(/\s+/g, " ");
+            if (!raw) return;
+            const existente = listarBairros().find(b => b.toLowerCase() === raw.toLowerCase());
+            const nome = existente || raw.toUpperCase();
+            if (!existente) {
+                bairrosExtra.push(nome);
+                saveToLocalStorage();
+            }
+            renderBairrosSelect();
+            document.getElementById("input-bairro").value = nome;
+            closeAddBairroModal();
+        }
+
+        // ==========================================
+        // MAPA: EXPANDIR / VOLTAR
+        // ==========================================
+        function toggleMapExpand(force) {
+            const sec = document.getElementById("sec-mapView");
+            const on = typeof force === "boolean" ? force : !sec.classList.contains("map-expanded");
+            sec.classList.toggle("map-expanded", on);
+            document.body.classList.toggle("overflow-hidden", on);
+            document.getElementById("btnMapExpandIcon").className = on ? "fa-solid fa-compress" : "fa-solid fa-expand";
+            document.getElementById("btnMapExpandLabel").textContent = on ? "Voltar" : "Expandir";
+            setTimeout(() => { if (overviewMap) overviewMap.invalidateSize(); }, 150);
+        }
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && document.getElementById("sec-mapView").classList.contains("map-expanded")) toggleMapExpand(false);
+        });
+
         function fmtDroga(g) {
             g = g || 0;
             if (g >= 1000) return (g / 1000).toFixed(2) + " kg";
@@ -1372,7 +1651,8 @@
                     o.municoes > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-200 text-red-900 rounded-full mr-1">${o.municoes} mun.</span>` : "",
                     o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.armaBranca} a. branca(s)</span>` : "",
                     o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.simulacros} simulacro(s)</span>` : "",
-                    drogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${fmtDroga(drogasG)}</span>` : ""
+                    drogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full mr-1">${fmtDroga(drogasG)}</span>` : "",
+                    badgesValoresObjetos(o)
                 ].join("") || `<span class="text-xs text-slate-400">-</span>`;
                 return `
                     <tr class="hover:bg-slate-50 transition-colors align-top">
@@ -1451,8 +1731,7 @@
                 </div>`;
 
             const cards = [
-                card("Ocorrências", g("stat-total-occurrences"), []),
-                card("Pessoas Presas", g("stat-total-presos"), []),
+                card("Ocorrências e Pessoas Presas", g("stat-total-occurrences"), [["Pessoas presas/conduzidas", "stat-total-presos"]]),
                 card("Armas &amp; Munições", g("stat-total-weapons"), [
                     ["Pistolas", "stat-w-pistola"], ["Revólveres", "stat-w-revolver"],
                     ["Espingardas/Carabinas", "stat-w-longa"], ["Caseiras/Outras", "stat-w-caseira"],
@@ -1464,6 +1743,10 @@
                 card("Veículos Recuperados", g("stat-veic-recuperados"), [
                     ["Carros", "stat-v-carros"], ["Motos", "stat-v-motos"], ["Roubados", "stat-v-roubados"],
                     ["Furtados", "stat-v-furtados"], ["Localizados", "stat-v-localizados"]
+                ]),
+                card("Valores &amp; Objetos Apreendidos", "", [
+                    ["Valores (R$)", "stat-val-brl"], ["Moeda estrangeira", "stat-val-est"], ["Objetos apreendidos", "stat-obj-total"], ["Celulares", "stat-obj-celular"],
+                    ["Balanças", "stat-obj-balanca"], ["Prensas", "stat-obj-prensa"], ["Outros objetos", "stat-obj-outros"]
                 ]),
                 card("Bairro Principal", g("stat-top-bairro"), [["Registros", "stat-top-bairro-count"]])
             ].join("");
@@ -1535,6 +1818,8 @@
                     o.armaBranca > 0 ? `Armas brancas: ${o.armaBranca}` : "",
                     o.simulacros > 0 ? `Simulacros: ${o.simulacros}` : "",
                     drogasG > 0 ? `Drogas: ${fmtDroga(drogasG)}` : "",
+                    ...linhasValores(o),
+                    ...linhasObjetos(o),
                     itens(o.motos, {furtada:"Moto furtada", roubada:"Moto roubada", localizada:"Moto localizada", recuperada:"Moto recuperada"}),
                     itens(o.veiculos, {furtado:"Veíc. furtado", roubado:"Veíc. roubado", localizado:"Veíc. localizado", recuperado:"Veíc. recuperado"})
                 ].filter(Boolean).map(escHtml).join("<br>") || "-";
@@ -1586,6 +1871,8 @@
             if (o.municoes === undefined) o.municoes = 0;
             if (o.armaBranca === undefined) o.armaBranca = 0;
             if (o.simulacros === undefined) o.simulacros = 0;
+            if (!Array.isArray(o.valores)) o.valores = [];
+            if (!Array.isArray(o.objetos)) o.objetos = [];
             o.motos = Object.assign({furtada:0,roubada:0,localizada:0,recuperada:0}, o.motos || {});
             o.veiculos = Object.assign({furtado:0,roubado:0,localizado:0,recuperado:0}, o.veiculos || {});
             const nd = normalizeDate(o.data);
@@ -1638,6 +1925,8 @@
             recomputeMunicipios();
             const key = JSON.stringify(municipios);
             if (key !== lastMunKey) { lastMunKey = key; renderMunicipiosSelect(); }
+            const bKey = JSON.stringify(listarBairros());
+            if (bKey !== lastBairroKey) { lastBairroKey = bKey; renderBairrosSelect(); }
             populateAnoSelects();
             renderDashboard();
             renderTable();
@@ -1747,6 +2036,10 @@
                 // Standardize naturezas as arrays
                 ocorrencias = parsed.map(normalizeRecord);
             }
+            try {
+                const savedBairros = JSON.parse(localStorage.getItem("sro_bairros") || "[]");
+                if (Array.isArray(savedBairros)) bairrosExtra = savedBairros;
+            } catch (_) {}
             const savedMuns = localStorage.getItem("sro_municipios");
             if (savedMuns) {
                 municipios = JSON.parse(savedMuns);
@@ -1757,6 +2050,7 @@
             if (CLOUD_MODE) return; // no modo online nada é gravado no navegador
             localStorage.setItem("sro_ocorrencias", JSON.stringify(ocorrencias));
             localStorage.setItem("sro_municipios", JSON.stringify(municipios));
+            localStorage.setItem("sro_bairros", JSON.stringify(bairrosExtra));
         }
 
         function initFormSelectors() {
@@ -1784,22 +2078,12 @@
             // Populate Municipios
             renderMunicipiosSelect();
 
-            // Populate Bairros
-            const bairroSelect = document.getElementById("input-bairro");
-            bairroSelect.innerHTML = '<option value="">Selecione o Bairro...</option>' + 
-                BAIRROS_CLEAN.map(b => `<option value="${b}">${b}</option>`).join('');
-
-            const filterBairro = document.getElementById("mapFilterBairro");
-            filterBairro.innerHTML = '<option value="">Todos os Bairros</option>' + 
-                BAIRROS_CLEAN.map(b => `<option value="${b}">${b}</option>`).join('');
+            // Populate Bairros (lista fixa + cadastrados manualmente)
+            renderBairrosSelect();
 
             // Natureza Datalist & Select
             const natureList = document.getElementById("naturezasList");
             natureList.innerHTML = NATUREZAS_CLEAN.map(n => `<option value="${n}"></option>`).join('');
-
-            const dashFilterBairro = document.getElementById("dashFilterBairro");
-            dashFilterBairro.innerHTML = '<option value="">Todos os Bairros</option>' +
-                BAIRROS_CLEAN.map(b => `<option value="${b}">${b}</option>`).join('');
 
             const dashFilterNatureza = document.getElementById("dashFilterNatureza");
             dashFilterNatureza.innerHTML = '<option value="">Todas as Naturezas</option>' + 
@@ -1983,6 +2267,12 @@
                 return;
             }
 
+            const objRes = coletarObjetos();
+            if (objRes.erro) {
+                alert("Em Objetos Apreendidos, selecione o tipo (celulares, balança, prensa ou outros) para cada quantidade informada.");
+                return;
+            }
+
             const record = {
                 id: customId,
                 data: document.getElementById("input-data").value,
@@ -2021,6 +2311,8 @@
                     localizado: parseInt(document.getElementById("veic-localizado").value) || 0,
                     recuperado: parseInt(document.getElementById("veic-recuperado").value) || 0
                 },
+                valores: coletarValores(),
+                objetos: objRes.lista,
                 obs: document.getElementById("input-obs").value
             };
 
@@ -2089,6 +2381,8 @@
                 document.getElementById("veic-" + k).value = occ.veiculos?.[k] || 0;
             });
 
+            resetValoresObjetos(occ);
+
             setPickerPosition(occ.lat, occ.lng);
             switchTab('cadastro');
         }
@@ -2119,6 +2413,7 @@
         // ==========================================
 
         function switchTab(tab) {
+            toggleMapExpand(false);
             const tabs = ['dashboard', 'mapView', 'cadastro', 'tabela'];
             
             tabs.forEach(t => {
@@ -2224,6 +2519,12 @@
             document.getElementById("stat-d-crack").innerText = fmtDroga(craG);
             document.getElementById("stat-d-cocaina").innerText = fmtDroga(cocG + outDG);
 
+            // Valores apreendidos (R$ e moeda estrangeira)
+            let valBrl = 0, valEst = 0;
+            dataset.forEach(o => { const s = somaValores(o); valBrl += s.brl; valEst += s.est; });
+            document.getElementById("stat-val-brl").innerText = fmtBRL(valBrl);
+            document.getElementById("stat-val-est").innerText = fmtEst(valEst);
+
             // Stat: Veículos e Motos
             const vt = {mf:0, mr:0, ml:0, mc:0, vf:0, vr:0, vl:0, vc:0};
             dataset.forEach(o => {
@@ -2238,6 +2539,15 @@
             document.getElementById("stat-v-roubados").innerText = vt.mr + vt.vr;
             document.getElementById("stat-v-furtados").innerText = vt.mf + vt.vf;
             document.getElementById("stat-v-localizados").innerText = vt.ml + vt.vl;
+
+            // Objetos apreendidos
+            const objT = { celular: 0, balanca: 0, prensa: 0, outros: 0 };
+            dataset.forEach(o => { const s = somaObjetos(o); Object.keys(objT).forEach(k => objT[k] += s[k]); });
+            document.getElementById("stat-obj-total").innerText = objT.celular + objT.balanca + objT.prensa + objT.outros;
+            document.getElementById("stat-obj-celular").innerText = objT.celular;
+            document.getElementById("stat-obj-balanca").innerText = objT.balanca;
+            document.getElementById("stat-obj-prensa").innerText = objT.prensa;
+            document.getElementById("stat-obj-outros").innerText = objT.outros;
 
             // Stat 5: Top Neighborhood
             const bairroCounts = {};
@@ -2474,6 +2784,7 @@
                     const totalDrogasKg = (totalDrogasG / 1000).toFixed(2);
                     const totalMotos = Object.values(o.motos || {}).reduce((a,b)=>a+(b||0),0);
                     const totalVeic = Object.values(o.veiculos || {}).reduce((a,b)=>a+(b||0),0);
+                    const popVal = linhasValores(o), popObj = linhasObjetos(o);
 
                     const naturezasFormatted = (o.naturezas || [o.natureza]).map(n => `<li class="list-disc ml-4 text-xs font-semibold text-slate-800">${n}</li>`).join('');
 
@@ -2487,6 +2798,8 @@
                             ${totalArmas > 0 || o.municoes > 0 ? `<p class="text-xs font-semibold text-red-600 mt-0.5"><i class="fa-solid fa-gun"></i> ${totalArmas} arma(s) / ${o.municoes||0} mun. apreendida(s)</p>` : ''}
                             ${o.armaBranca > 0 || o.simulacros > 0 ? `<p class="text-xs font-semibold text-slate-700 mt-0.5"><i class="fa-solid fa-gun"></i> Arma branca: ${o.armaBranca||0} / Simulacro: ${o.simulacros||0}</p>` : ''}
                             ${totalDrogasG > 0 ? `<p class="text-xs font-semibold text-amber-600 mt-0.5"><i class="fa-solid fa-pills"></i> ${totalDrogasKg} kg de drogas</p>` : ''}
+                            ${popVal.map(t => `<p class="text-xs font-semibold text-emerald-700 mt-0.5"><i class="fa-solid fa-sack-dollar"></i> ${t}</p>`).join('')}
+                            ${popObj.map(t => `<p class="text-xs font-semibold text-violet-700 mt-0.5"><i class="fa-solid fa-box-open"></i> ${t}</p>`).join('')}
                             ${totalMotos > 0 ? `<p class="text-xs font-semibold text-indigo-600 mt-0.5"><i class="fa-solid fa-motorcycle"></i> Motos: ${o.motos.furtada} furt. / ${o.motos.roubada} roub. / ${o.motos.localizada} local. / ${o.motos.recuperada} recup.</p>` : ''}
                             ${totalVeic > 0 ? `<p class="text-xs font-semibold text-sky-600 mt-0.5"><i class="fa-solid fa-car"></i> Veículos: ${o.veiculos.furtado} furt. / ${o.veiculos.roubado} roub. / ${o.veiculos.localizado} local. / ${o.veiculos.recuperado} recup.</p>` : ''}
                         </div>
@@ -2545,6 +2858,7 @@
                 const totalArmas = (o.armas?.pistola||0)+(o.armas?.revolver||0)+(o.armas?.longa||0)+(o.armas?.caseira||0)+(o.armas?.outras||0);
                 const totalDrogasG = (o.drogas?.maconha||0)+(o.drogas?.crack||0)+(o.drogas?.cocaina||0)+(o.drogas?.outras||0);
                 const totalDrogasKg = (totalDrogasG / 1000).toFixed(2);
+                const vo = badgesValoresObjetos(o);
 
                 const naturezasList = o.naturezas || [o.natureza];
                 const naturezasBadges = naturezasList.map(n => `<span class="inline-block bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-semibold px-2 py-0.5 rounded-md mr-1 mb-1">${n}</span>`).join('');
@@ -2573,7 +2887,8 @@
                             ${totalDrogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${totalDrogasKg}kg drogas</span>` : ''}
                             ${o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.armaBranca} a. branca(s)</span>` : ''}
                             ${o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.simulacros} simulacro(s)</span>` : ''}
-                            ${totalArmas === 0 && o.municoes === 0 && totalDrogasG === 0 && !(o.armaBranca > 0) && !(o.simulacros > 0) ? `<span class="text-xs text-slate-400">-</span>` : ''}
+                            ${vo}
+                            ${totalArmas === 0 && o.municoes === 0 && totalDrogasG === 0 && !(o.armaBranca > 0) && !(o.simulacros > 0) && !vo ? `<span class="text-xs text-slate-400">-</span>` : ''}
                         </td>
                         <td class="p-3.5 text-center whitespace-nowrap">
                             <button onclick="editOcorrencia(${o.id})" title="Editar" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-1">
@@ -2592,11 +2907,11 @@
         function exportToCSV() {
             if (ocorrencias.length === 0) return alert("Sem dados para exportar.");
 
-            let csv = "ID;Data;FaixaHoraria;Municipio;Bairro;Natureza1;Natureza2;Natureza3;Natureza4;Natureza5;PessoasPresas;Pistola;Revolver;ArmaLonga;ArmaCaseira;OutrasArmas;MunicoesApreendidas;Maconha_g;Crack_g;Cocaina_g;OutrasDrogas_g;Latitude;Longitude;Observacoes;MotoFurtada;MotoRoubada;MotoLocalizada;MotoRecuperada;VeiculoFurtado;VeiculoRoubado;VeiculoLocalizado;VeiculoRecuperado;ArmaBranca;Simulacros\n";
+            let csv = "ID;Data;FaixaHoraria;Municipio;Bairro;Natureza1;Natureza2;Natureza3;Natureza4;Natureza5;PessoasPresas;Pistola;Revolver;ArmaLonga;ArmaCaseira;OutrasArmas;MunicoesApreendidas;Maconha_g;Crack_g;Cocaina_g;OutrasDrogas_g;Latitude;Longitude;Observacoes;MotoFurtada;MotoRoubada;MotoLocalizada;MotoRecuperada;VeiculoFurtado;VeiculoRoubado;VeiculoLocalizado;VeiculoRecuperado;ArmaBranca;Simulacros;ValoresReais;ValoresMoedaEstrangeira;ObjCelulares;ObjBalancas;ObjPrensas;ObjOutros\n";
 
             ocorrencias.forEach(o => {
                 const nats = o.naturezas || [o.natureza || ""];
-                csv += `${o.id};"${o.data}";"${o.faixa}";"${o.municipio}";"${o.bairro}";"${nats[0]||''}";"${nats[1]||''}";"${nats[2]||''}";"${nats[3]||''}";"${nats[4]||''}";${o.presos||0};${o.armas?.pistola||0};${o.armas?.revolver||0};${o.armas?.longa||0};${o.armas?.caseira||0};${o.armas?.outras||0};${o.municoes||0};${o.drogas?.maconha||0};${o.drogas?.crack||0};${o.drogas?.cocaina||0};${o.drogas?.outras||0};${o.lat};${o.lng};"${(o.obs||'').replace(/"/g, '""')}";${o.motos?.furtada||0};${o.motos?.roubada||0};${o.motos?.localizada||0};${o.motos?.recuperada||0};${o.veiculos?.furtado||0};${o.veiculos?.roubado||0};${o.veiculos?.localizado||0};${o.veiculos?.recuperado||0};${o.armaBranca||0};${o.simulacros||0}\n`;
+                csv += `${o.id};"${o.data}";"${o.faixa}";"${o.municipio}";"${o.bairro}";"${nats[0]||''}";"${nats[1]||''}";"${nats[2]||''}";"${nats[3]||''}";"${nats[4]||''}";${o.presos||0};${o.armas?.pistola||0};${o.armas?.revolver||0};${o.armas?.longa||0};${o.armas?.caseira||0};${o.armas?.outras||0};${o.municoes||0};${o.drogas?.maconha||0};${o.drogas?.crack||0};${o.drogas?.cocaina||0};${o.drogas?.outras||0};${o.lat};${o.lng};"${(o.obs||'').replace(/"/g, '""')}";${o.motos?.furtada||0};${o.motos?.roubada||0};${o.motos?.localizada||0};${o.motos?.recuperada||0};${o.veiculos?.furtado||0};${o.veiculos?.roubado||0};${o.veiculos?.localizado||0};${o.veiculos?.recuperado||0};${o.armaBranca||0};${o.simulacros||0};${somaValores(o).brl};${somaValores(o).est};${somaObjetos(o).celular};${somaObjetos(o).balanca};${somaObjetos(o).prensa};${somaObjetos(o).outros}\n`;
             });
 
             const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -2706,6 +3021,10 @@
 
                         const ex = (colOffset === 4 && cols.length >= 32) ? 24 : -1;
                         const xi = (k) => ex < 0 ? 0 : (parseInt(cols[ex + k]) || 0);
+                        const xn = (k) => ex < 0 ? 0 : (parseNum(cols[ex + k]) || 0);
+                        const vBrl = xn(10), vEst = xn(11);
+                        const objImp = [["celular", xi(12)], ["balanca", xi(13)], ["prensa", xi(14)], ["outros", xi(15)]]
+                            .filter(([, q]) => q > 0).map(([tipo, qtd]) => ({ qtd, tipo }));
 
                         const record = {
                             id: id,
@@ -2724,6 +3043,8 @@
                             veiculos: { furtado: xi(4), roubado: xi(5), localizado: xi(6), recuperado: xi(7) },
                             armaBranca: xi(8),
                             simulacros: xi(9),
+                            valores: [vBrl > 0 ? { valor: vBrl, tipo: "BRL" } : null, vEst > 0 ? { valor: vEst, tipo: "EST" } : null].filter(Boolean),
+                            objetos: objImp,
                             obs: obs
                         };
 
@@ -2754,6 +3075,7 @@
                         saveToLocalStorage();
                     }
                     renderMunicipiosSelect();
+                    renderBairrosSelect();
                     renderDashboard();
                     renderTable();
                     if (overviewMap) renderOverviewMap();
