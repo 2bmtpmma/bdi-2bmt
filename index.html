@@ -372,6 +372,16 @@
                     </div>
                 </div>
 
+                <!-- Pessoas Conduzidas (por mês, comparativo por ano) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:col-span-2">
+                    <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user-lock text-purple-600"></i> Quantidade de Pessoas Conduzidas por Mês
+                    </h2>
+                    <div class="flex-grow min-h-[250px] relative">
+                        <canvas id="chartConduzidos"></canvas>
+                    </div>
+                </div>
+
                 <!-- Drugs Breakdown -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:col-span-2">
                     <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -1078,6 +1088,7 @@
         let chartPresosInstance = null;
         let chartArmasInstance = null;
         let chartDrogasInstance = null;
+        let chartConduzidosInstance = null;
         let chartVeiculosInstance = null;
 
         // ======================================================================
@@ -1764,6 +1775,7 @@
 
             // Drogas e Veículos/Motos: largura total da página, um abaixo do outro (como no dashboard)
             const graficosLargos = [
+                ["Quantidade de Pessoas Conduzidas por Mês", chartConduzidosInstance],
                 ["Detalhamento de Apreensões de Drogas (kg)", chartDrogasInstance],
                 ["Detalhamento de Ocorrências de Veículos e Motos", chartVeiculosInstance]
             ].filter(([, inst]) => inst).map(([t, inst]) =>
@@ -2572,6 +2584,7 @@
             renderChartNatureza(dataset, anosGraf);
             renderChartPresos(dataset, anosGraf);
             renderChartArmas(dataset, anosGraf);
+            renderChartConduzidos(dataset, anosGraf);
             renderChartDrogas(dataset, anosGraf);
             renderChartVeiculos(dataset, anosGraf);
             renderRegistroPanel();
@@ -2684,6 +2697,20 @@
                 data: {
                     labels: ['Pistola', 'Revólver', 'Arma Longa', 'Arma Caseira', 'Outras'],
                     datasets: dsAnos(anos, by, ds => campos.map(c => ds.reduce((t, o) => t + (o.armas?.[c] || 0), 0)))
+                },
+                options: opcoesBarra()
+            });
+        }
+
+        // Pessoas Conduzidas por Mês (comparativo por ano)
+        function renderChartConduzidos(dataset, anos) {
+            const by = porAno(dataset, anos);
+            chartConduzidosInstance = novoGrafico("chartConduzidos", chartConduzidosInstance, {
+                type: 'bar',
+                data: {
+                    labels: MESES.map(m => m.name),
+                    datasets: dsAnos(anos, by, ds => MESES.map(m =>
+                        ds.filter(o => o.data && o.data.split('-')[1] === m.val).reduce((t, o) => t + (o.presos || 0), 0)))
                 },
                 options: opcoesBarra()
             });
