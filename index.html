@@ -1369,13 +1369,27 @@
             const partes = Object.keys(OBJ_TIPOS).filter(k => t[k] > 0).map(k => `${t[k]} ${OBJ_TIPOS[k].toLowerCase()}`);
             return partes.length ? [`Objetos: ${partes.join(", ")}`] : [];
         }
-        function badgesValoresObjetos(o) {
+        function listaBadgesValoresObjetos(o) {
             const s = somaValores(o), out = [];
-            if (s.brl > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full mr-1"><i class="fa-solid fa-sack-dollar text-[10px]"></i> ${fmtBRL(s.brl)}</span>`);
-            if (s.est > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full mr-1"><i class="fa-solid fa-coins text-[10px]"></i> ${fmtEst(s.est)} (estrang.)</span>`);
+            if (s.brl > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full"><i class="fa-solid fa-sack-dollar text-[10px]"></i> ${fmtBRL(s.brl)}</span>`);
+            if (s.est > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full"><i class="fa-solid fa-coins text-[10px]"></i> ${fmtEst(s.est)} (estrang.)</span>`);
             const to = totalObjetos(o);
-            if (to > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-violet-100 text-violet-800 rounded-full mr-1"><i class="fa-solid fa-box-open text-[10px]"></i> ${to} objeto(s)</span>`);
-            return out.join("");
+            if (to > 0) out.push(`<span class="inline-block px-2 py-0.5 text-xs font-bold bg-violet-100 text-violet-800 rounded-full"><i class="fa-solid fa-box-open text-[10px]"></i> ${to} objeto(s)</span>`);
+            return out;
+        }
+        function badgesValoresObjetos(o) {
+            return listaBadgesValoresObjetos(o).join("");
+        }
+        // Agrupa as apreensões em linhas de 3 itens; do 4º em diante, desce para a linha de baixo
+        function agruparApreensoes(itens, porLinha) {
+            porLinha = porLinha || 3;
+            const lista = (itens || []).filter(Boolean);
+            if (!lista.length) return `<span class="text-xs text-slate-400">-</span>`;
+            let html = '<div class="flex flex-col items-center gap-1">';
+            for (let i = 0; i < lista.length; i += porLinha) {
+                html += `<div class="flex flex-nowrap justify-center gap-1">${lista.slice(i, i + porLinha).join("")}</div>`;
+            }
+            return html + '</div>';
         }
 
         // ----- Linhas dinâmicas no cadastro -----
@@ -1657,14 +1671,14 @@
                 const totalArmas = (o.armas?.pistola||0)+(o.armas?.revolver||0)+(o.armas?.longa||0)+(o.armas?.caseira||0)+(o.armas?.outras||0);
                 const drogasG = (o.drogas?.maconha||0)+(o.drogas?.crack||0)+(o.drogas?.cocaina||0)+(o.drogas?.outras||0);
                 const badges = nats.filter(Boolean).map(n => `<span class="inline-block bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-semibold px-2 py-0.5 rounded-md mr-1 mb-1">${escHtml(n)}</span>`).join("");
-                const apre = [
-                    totalArmas > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full mr-1">${totalArmas} arma(s)</span>` : "",
-                    o.municoes > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-200 text-red-900 rounded-full mr-1">${o.municoes} mun.</span>` : "",
-                    o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.armaBranca} a. branca(s)</span>` : "",
-                    o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.simulacros} simulacro(s)</span>` : "",
-                    drogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full mr-1">${fmtDroga(drogasG)}</span>` : "",
-                    badgesValoresObjetos(o)
-                ].join("") || `<span class="text-xs text-slate-400">-</span>`;
+                const apre = agruparApreensoes([
+                    totalArmas > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full">${totalArmas} arma(s)</span>` : "",
+                    o.municoes > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-200 text-red-900 rounded-full">${o.municoes} mun.</span>` : "",
+                    o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full">${o.armaBranca} a. branca(s)</span>` : "",
+                    o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full">${o.simulacros} simulacro(s)</span>` : "",
+                    drogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${fmtDroga(drogasG)}</span>` : "",
+                    ...listaBadgesValoresObjetos(o)
+                ]);
                 return `
                     <tr class="hover:bg-slate-50 transition-colors align-top">
                         <td class="p-3 font-bold text-blue-600">#${escHtml(o.id)}</td>
@@ -1672,7 +1686,7 @@
                         <td class="p-3"><div class="font-bold text-slate-800">${escHtml(o.bairro)}</div><div class="text-xs text-slate-500">${escHtml(o.municipio)}</div></td>
                         <td class="p-3"><div class="flex flex-wrap">${badges}</div></td>
                         <td class="p-3 text-center">${o.presos > 0 ? `<span class="inline-block px-2.5 py-0.5 text-xs font-bold bg-purple-100 text-purple-800 rounded-full">${o.presos}</span>` : `<span class="text-xs text-slate-400">-</span>`}</td>
-                        <td class="p-3 text-center whitespace-nowrap">${apre}</td>
+                        <td class="p-3 text-center">${apre}</td>
                     </tr>`;
             }).join("");
         }
@@ -2885,7 +2899,14 @@
                 const totalArmas = (o.armas?.pistola||0)+(o.armas?.revolver||0)+(o.armas?.longa||0)+(o.armas?.caseira||0)+(o.armas?.outras||0);
                 const totalDrogasG = (o.drogas?.maconha||0)+(o.drogas?.crack||0)+(o.drogas?.cocaina||0)+(o.drogas?.outras||0);
                 const totalDrogasKg = (totalDrogasG / 1000).toFixed(2);
-                const vo = badgesValoresObjetos(o);
+                const apreTabela = agruparApreensoes([
+                    totalArmas > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full">${totalArmas} arma(s)</span>` : "",
+                    o.municoes > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-200 text-red-900 rounded-full">${o.municoes} mun.</span>` : "",
+                    totalDrogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${totalDrogasKg}kg drogas</span>` : "",
+                    o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full">${o.armaBranca} a. branca(s)</span>` : "",
+                    o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full">${o.simulacros} simulacro(s)</span>` : "",
+                    ...listaBadgesValoresObjetos(o)
+                ]);
 
                 const naturezasList = o.naturezas || [o.natureza];
                 const naturezasBadges = naturezasList.map(n => `<span class="inline-block bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-semibold px-2 py-0.5 rounded-md mr-1 mb-1">${n}</span>`).join('');
@@ -2908,14 +2929,8 @@
                         <td class="p-3.5 text-center font-bold">
                             ${o.presos > 0 ? `<span class="inline-block px-2.5 py-0.5 text-xs font-bold bg-purple-100 text-purple-800 rounded-full"><i class="fa-solid fa-user-lock text-[10px]"></i> ${o.presos}</span>` : `<span class="text-xs text-slate-400">0</span>`}
                         </td>
-                        <td class="p-3.5 text-center whitespace-nowrap">
-                            ${totalArmas > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full mr-1">${totalArmas} arma(s)</span>` : ''}
-                            ${o.municoes > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-red-200 text-red-900 rounded-full mr-1">${o.municoes} mun.</span>` : ''}
-                            ${totalDrogasG > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${totalDrogasKg}kg drogas</span>` : ''}
-                            ${o.armaBranca > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.armaBranca} a. branca(s)</span>` : ''}
-                            ${o.simulacros > 0 ? `<span class="inline-block px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-800 rounded-full mr-1">${o.simulacros} simulacro(s)</span>` : ''}
-                            ${vo}
-                            ${totalArmas === 0 && o.municoes === 0 && totalDrogasG === 0 && !(o.armaBranca > 0) && !(o.simulacros > 0) && !vo ? `<span class="text-xs text-slate-400">-</span>` : ''}
+                        <td class="p-3.5 text-center">
+                            ${apreTabela}
                         </td>
                         <td class="p-3.5 text-center whitespace-nowrap">
                             <button onclick="editOcorrencia(${o.id})" title="Editar" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-1">
